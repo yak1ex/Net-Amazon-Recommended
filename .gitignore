@@ -1,0 +1,4 @@
+.build/
+Net-Amazon-Recommended-*.tar.gz
+Net-Amazon-Recommended-*/
+*.BAK
