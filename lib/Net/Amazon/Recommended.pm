@@ -6,112 +6,41 @@ use warnings;
 # ABSTRCT: Grab and configurate recommendations by Amazon
 # VERSION
 
+use Carp;
+use WWW::Mechanize;
 use Template::Extract;
 
-# m!http://www\.amazon\.co\.jp/gp/yourstore/(recs|nr|fr)/!)
-
-sub aggregate
-{
-	my ($self, $context, $args) = @_;
-
-	my $mech = join('::', __PACKAGE__, 'Mechanize')->new($self);
-	$mech->login or $context->error('login failed');
-
-	my $content = $mech->get($args->{feed}->url);
-
-	my $pages = $self->conf->{pages} || 1;
-
-	my $feed = $args->{feed};
-	foreach my $page (1..$pages) {
-		$content = $mech->next() if $page != 1;
-		my $extractor = Template::Extract->new;
-
-		my $source = $extractor->extract($self->tmpl_ext, $content);
-		$source->{category} =~ s/<[^>]*>//g;
-		$source->{category} =~ s/\n//g;
-		$source->{category} =~ s/^&gt;//;
-		$source->{category} = [ split /&gt;/, $source->{category} ];
-
-# TODO: No need to set multiple times
-		my $type;
-		$type = '[すべて] ' if $args->{feed}->url =~ /recs/;
-		$type = '[ニューリリース情報] ' if $args->{feed}->url =~ /nr/;
-		$type = '[まもなく発売] ' if $args->{feed}->url =~ /fr/;
-		$feed->title('Amazon おすすめ: ' . $type . join(' > ', @{$source->{category}}));
-		$feed->link($feed->url);
-		$feed->description($feed->title);
-
-		foreach my $data (@{$source->{entry}}) {
-			$data->{author} =~ s/^\s+//;
-			$data->{author} =~ s/\s+$//;
-			$data->{url} =~ s,www\.amazon\.co\.jp/.*/dp/,www.amazon.co.jp/dp/,;
-			$data->{url} =~ s,/ref=[^/]*$,,;
-			my $body = $self->templatize('output.tmpl', $data);
-
-			my $date = Plagger::Date->strptime('%m月 %d, %Y', $data->{date});
-			$date = Plagger::Date->strptime('%m月, %Y', $data->{date}) if !defined($date);
-			if(defined $date) {
-				$date->set_time_zone('Asia/Tokyo'); # set floating datetime
-				$date->set_time_zone(Plagger->context->conf->{timezone} || 'local');
-			}
-
-			my $entry = Plagger::Entry->new;
-			$entry->title($data->{title});
-			$entry->link($data->{url});
-			$entry->body($body);
-			$entry->date($date);
-			$entry->author($data->{author});
-			$feed->add_entry($entry);
-		}
-	}
-	$context->update->add($feed);
-}
-
-package Plagger::Plugin::CustomFeed::AmazonRecommend::Mechanize;
-
-use strict;
-use warnings;
-
-use base qw(Class::Accessor::Fast);
-
-use Plagger::Mechanize;
-
-__PACKAGE__->mk_accessors(qw(mech email password is_login));
-
-my $login_url = 'https://www.amazon.co.jp/gp/sign-in.html';
+use constants {
+	ALL => 0,
+	NEWRELEASE => 1,
+	COMINGSOON => 2,
+};
 
 sub new
 {
-	my $class =shift;
-	my $plugin = shift;
-	my $mech = Plagger::Mechanize->new;
+	my $self = shift;
+	my $class = ref $self || $self;
+	my %args = @_;
+	croak 'email andd password are required' if ! exists $args{email} || ! exists $args{password};
 	return bless {
-		mech     => $mech,
-		email    => $plugin->conf->{email},
-		password => $plugin->conf->{password},
-		is_login => 0,
+		_EMAIL => $args{email},
+		_PASSWORD => $args{password},
+		_DOMAIN => $args{domain} || 'co.jp',
 	}, $class;
 }
 
-sub login
+sub is_login
 {
-	my ($self) = @_;
-	return 1 if $self->is_login(); # TODO: handle expiration
-	my $mech = $self->mech;
-	$mech->get($login_url);
-	$mech->submit_form(
-		form_name => 'sign-in',
-		fields => {
-			email => $self->email,
-			password => $self->password,
-		},
-	);
-	return undef if $mech->content() =~ m!http://www.amazon.co.jp/gp/yourstore/ref=pd_irl_gw?ie=UTF8&amp;signIn=1!;
-	$self->is_login(1);
-	return 1;
+	my ($self, $mech, $value) = @_;
+	$self->{_ISLOGIN} = $value if defined $value;
+	return $self->{_ISLOGIN};
 }
 
-sub get
+# TODO: Adjust URL
+my $login_url = 'https://www.amazon.co.jp/gp/sign-in.html';
+
+# TODO: Unnecessary?
+sub get_
 {
 	my ($self, $url) = @_;
 	my $mech = $self->mech;
@@ -128,7 +57,74 @@ sub next
 	return $mech->content();
 }
 
-# TODO?: AUTOLOAD to transfer Plagger::Mechanize
+sub login
+{
+	my ($mech, $email, $pass) = @_;
+	return 1 if $self->is_login($mech); # TODO: handle expiration
+	$mech->get($login_url);
+	$mech->submit_form(
+		form_name => 'sign-in',
+		fields => {
+			email => $self->{_EMAIL},
+			password => $self->{_PASSWORD},
+		},
+	);
+	# TODO: Check correctness
+	return undef if $mech->content() =~ m!http://www.amazon.$self->{_DOMAIN}/gp/yourstore/ref=pd_irl_gw\?ie=UTF8&amp;signIn=1!;
+	$self->is_login($mech, 1);
+	return 1;
+}
+
+# m!http://www\.amazon\.co\.jp/gp/yourstore/(recs|nr|fr)/!)
+
+my %url =
+(
+	ALL() => '/gp/yourstore/recs/ref=pd_ys_welc',
+	NEWRELEASE() => '/gp/yourstore/nr/ref=pd_ys_welc',
+	COMINGSOON() => '/gp/yourstore/fr/ref=pd_ys_welc',
+);
+
+sub get
+{
+	my ($self, $type, $max_pages) = @_;
+
+	my $mech = WWW::Mechanize->new;
+	$self->login($mech, $self->{_EMAIL}, $self->{_PASSWORD}) or die 'login failed';
+
+	my $content = $mech->get($args->{feed}->url);
+
+	# TODO: Default to unlimited
+	my $pages = $max_pages || 1;
+
+	foreach my $page (1..$pages) {
+		$content = $mech->next() if $page != 1;
+		my $extractor = Template::Extract->new;
+
+		my $source = $extractor->extract($self->tmpl_ext, $content);
+		$source->{category} =~ s/<[^>]*>//g;
+		$source->{category} =~ s/\n//g;
+		$source->{category} =~ s/^&gt;//;
+		$source->{category} = [ split /&gt;/, $source->{category} ];
+
+		foreach my $data (@{$source->{entry}}) {
+			$data->{author} =~ s/^\s+//;
+			$data->{author} =~ s/\s+$//;
+# TODO: Adjust URL
+			$data->{url} =~ s,www\.amazon\.co\.jp/.*/dp/,www.amazon.co.jp/dp/,;
+			$data->{url} =~ s,/ref=[^/]*$,,;
+
+# TODO: Use alternative module
+			my $date = Plagger::Date->strptime('%m月 %d, %Y', $data->{date});
+			$date = Plagger::Date->strptime('%m月, %Y', $data->{date}) if !defined($date);
+			if(defined $date) {
+				$date->set_time_zone('Asia/Tokyo'); # set floating datetime
+				$date->set_time_zone(Plagger->context->conf->{timezone} || 'local');
+			}
+# TODO: Set back to date
+		}
+	}
+	return $source;
+}
 
 1;
 __DATA__
