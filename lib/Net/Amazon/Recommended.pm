@@ -136,6 +136,16 @@ sub login
 			password => $self->{_PASSWORD},
 		},
 	);
+	if($mech->content() =~ m!/errors/validateCaptcha!) {
+		$mech->content() =~ m|<img src="([^"]*)">|;
+		system "cygstart $1";
+		my $value = <STDIN>; chomp $value;
+		$mech->submit_form(
+			with_fields => {
+				'field-keywords' => $value,
+			}
+		);
+	}
 	return undef if $mech->content() =~ m!http://www.amazon.co.jp/gp/yourstore/ref=pd_irl_gw?ie=UTF8&amp;signIn=1!;
 	$self->is_login(1);
 	return 1;
