@@ -8,6 +8,7 @@ use warnings;
 
 use Carp;
 use Template::Extract;
+use DateTime::Format::Strptime;
 
 use constant {
 	ALL => 0,
@@ -28,7 +29,7 @@ sub new
 	}, $class;
 }
 
-my %url =
+my (%url) =
 (
 	ALL() => '/gp/yourstore/recs/ref=pd_ys_welc',
 	NEWRELEASE() => '/gp/yourstore/nr/ref=pd_ys_welc',
@@ -42,19 +43,35 @@ sub get
 	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
 		%$self
 	);
-	$self->login($mech, , $self->{_PASSWORD}) or die 'login failed';
+	$mech->login() or die 'login failed';
 
-	my $content = $mech->get('https://www.amazon'.$self->{_DOMAIN}.$url{$type});
+	my $url = 'https://www.amazon.'.$self->{_DOMAIN}.$url{$type};
+	my $content = $mech->get($url);
 
-	# TODO: Default to unlimited
+# TODO: Default to unlimited
 	my $pages = $max_pages || 1;
+
+# TODO: Pattern depends on domain
+	my $strp1 = DateTime::Format::Strptime->new(pattern => '%mŒŽ %d, %Y');
+	my $strp2 = DateTime::Format::Strptime->new(pattern => '%mŒŽ, %Y');
+
+	my $extractor = Template::Extract->new;
+	my $extract_tmpl = <<'EOF';
+[% FOREACH entry %]<tr valign="top">
+  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>
+  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
+  <td width="100%">
+    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
+    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
+<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>
+[% ... %]
+[% END %]
+EOF
 
 	my $result = [];
 	foreach my $page (1..$pages) {
 		$content = $mech->next() if $page != 1;
-		my $extractor = Template::Extract->new;
-
-		my $source = $extractor->extract($self->tmpl_ext, $content);
+		my $source = $extractor->extract($extract_tmpl, $content);
 		$source->{category} =~ s/<[^>]*>//g;
 		$source->{category} =~ s/\n//g;
 		$source->{category} =~ s/^&gt;//;
@@ -67,14 +84,9 @@ sub get
 			$data->{url} =~ s,www\.amazon\.co\.jp/.*/dp/,www.amazon.co.jp/dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
-# TODO: Use alternative module
-			my $date = Plagger::Date->strptime('%mŒŽ %d, %Y', $data->{date});
-			$date = Plagger::Date->strptime('%mŒŽ, %Y', $data->{date}) if !defined($date);
-			if(defined $date) {
-				$date->set_time_zone('Asia/Tokyo'); # set floating datetime
-				$date->set_time_zone(Plagger->context->conf->{timezone} || 'local');
-			}
-# TODO: Set back to date
+			my $date = $strp1->parse_datetime($data->{date});
+			$date = $strp2->parse_datetime($data->{date}) if !defined($date);
+			$data->{date} = $date if defined $date;
 		}
 		push @$result, @{$source->{entry}};
 	}
@@ -95,6 +107,7 @@ sub new
 	my ($self, %args) =shift;
 	my $class = ref $self || $self;
 	my $mech = WWW::Mechanize->new;
+#	$mech->agent_alias('Windows IE 6');
 	return bless {
 	   _MECH     => $mech,
 	   _EMAIL    => $args{email},
@@ -114,13 +127,13 @@ sub login
 {
 	my ($self) = @_;
 	return 1 if $self->is_login(); # TODO: handle expiration
-	my $mech = $self->mech;
+	my $mech = $self->{_MECH};
 	$mech->get($login_url);
 	$mech->submit_form(
 		form_name => 'sign-in',
-			fields => {
-			email => $self->email,
-			password => $self->password,
+		fields => {
+			email => $self->{_EMAIL},
+			password => $self->{_PASSWORD},
 		},
 	);
 	return undef if $mech->content() =~ m!http://www.amazon.co.jp/gp/yourstore/ref=pd_irl_gw?ie=UTF8&amp;signIn=1!;
@@ -130,35 +143,20 @@ sub login
 
 sub get
 {
-   my ($self, $url) = @_;
-   my $mech = $self->mech;
-   $self->login() or return undef;
-  $mech->get($url);
-   return $mech->content();
+	my ($self, $url) = @_;
+	my $mech = $self->{_MECH};
+	$self->login() or return undef;
+	$mech->get($url);
+	return $mech->content();
 }
 
 sub next
 {
 	my ($self, $url) = @_;
-	my $mech = $self->mech;
+	my $mech = $self->{_MECH};
 	$mech->follow_link(url_regex => qr/pd_ys_next/);
 	return $mech->content();
 }
 
 1;
-__DATA__
-<table width="100%">
-<tr><td>
-<a href="/gp/yourstore/[% ... %]/ref=pd_ys_welc">[% ... %]</a>
-[% category %]
-</td></tr>
-</table>[% ... %][% FOREACH entry %]<tr valign="top">
-  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>
-  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
-  <td width="100%">
-    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
-    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
-<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>
-[% ... %]
-[% END %]
 __END__
