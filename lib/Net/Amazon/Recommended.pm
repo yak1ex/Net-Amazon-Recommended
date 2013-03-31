@@ -41,7 +41,8 @@ sub get
 	my ($self, $type, $max_pages) = @_;
 
 	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		%$self
+		email => $self->{_EMAIL},
+		password => $self->{_PASSWORD},
 	);
 	$mech->login() or die 'login failed';
 
@@ -108,7 +109,7 @@ my $login_url = 'https://www.amazon.co.jp/gp/sign-in.html';
 
 sub new
 {
-	my ($self, %args) =shift;
+	my ($self, %args) = @_;
 	my $class = ref $self || $self;
 	my $mech = WWW::Mechanize->new;
 #	$mech->agent_alias('Windows IE 6');
