@@ -58,15 +58,15 @@ print $url,"\n";
 	my $strp2 = DateTime::Format::Strptime->new(pattern => '%mŒŽ, %Y');
 
 	my $extractor = Template::Extract->new;
+# TODO: more relaxed template
 	my $extract_tmpl = <<'EOF';
 [% FOREACH entry %]<tr valign="top">
-  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>
+  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
   <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
   <td width="100%">
     <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
     <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
-<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>
-[% ... %]
+<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
 [% END %]
 EOF
 
