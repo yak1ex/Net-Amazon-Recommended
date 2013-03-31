@@ -11,4 +11,4 @@ use_ok('Net::Amazon::Recommended');
 
 my $obj;
 lives_ok { $obj = Net::Amazon::Recommended->new(email => $ENV{AMAZON_EMAIL}, password => $ENV{AMAZON_PASSWORD}) };
-lives_ok { note(Data::Dumper->Dump([$obj->get(Net::Amazon::Recommended->ALL)])) };
+lives_ok { note(scalar(@{$obj->get(Net::Amazon::Recommended->ALL)}).' items found') };
