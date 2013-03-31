@@ -29,8 +29,8 @@ sub new
 	}, $class;
 }
 
-my (%url) =
-(
+# TODO: Handle category
+my (%url) = (
 	ALL() => '/gp/yourstore/recs/ref=pd_ys_welc',
 	NEWRELEASE() => '/gp/yourstore/nr/ref=pd_ys_welc',
 	COMINGSOON() => '/gp/yourstore/fr/ref=pd_ys_welc',
@@ -58,12 +58,12 @@ sub get
 # TODO: Default to unlimited
 	my $pages = $max_pages || 1;
 
-# TODO: Pattern depends on domain
 	my $key = exists $format{$self->{_DOMAIN}} ? $self->{_DOMAIN} : '';
 	my (@strp) = map { DateTime::Format::Strptime->new(pattern => $_) } @{$format{$key}};
 
 	my $extractor = Template::Extract->new;
 # TODO: more relaxed template
+# TODO: there might be not date
 	my $extract_tmpl = <<'EOF';
 [% FOREACH entry %]<tr valign="top">
   <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
@@ -87,7 +87,6 @@ close $fh;
 		foreach my $data (@{$source->{entry}}) {
 			$data->{author} =~ s/^\s+//;
 			$data->{author} =~ s/\s+$//;
-# TODO: Adjust URL
 			$data->{url} =~ s,www\.amazon\.\Q$self->{_DOMAIN}\E/.*/dp/,www.amazon.$self->{_DOMAIN}/dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
