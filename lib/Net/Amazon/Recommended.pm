@@ -78,11 +78,6 @@ print $fh $content;
 close $fh;
 }
 		my $source = $extractor->extract($extract_tmpl, $content);
-		$source->{category} =~ s/<[^>]*>//g;
-		$source->{category} =~ s/\n//g;
-		$source->{category} =~ s/^&gt;//;
-		$source->{category} = [ split /&gt;/, $source->{category} ];
-
 		foreach my $data (@{$source->{entry}}) {
 			$data->{author} =~ s/^\s+//;
 			$data->{author} =~ s/\s+$//;
