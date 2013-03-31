@@ -41,8 +41,9 @@ sub get
 	my ($self, $type, $max_pages) = @_;
 
 	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		email => $self->{_EMAIL},
+		email    => $self->{_EMAIL},
 		password => $self->{_PASSWORD},
+		domain   => $self->{_DOMAIN},
 	);
 	$mech->login() or die 'login failed';
 
@@ -82,7 +83,7 @@ close $fh;
 			$data->{author} =~ s/^\s+//;
 			$data->{author} =~ s/\s+$//;
 # TODO: Adjust URL
-			$data->{url} =~ s,www\.amazon\.co\.jp/.*/dp/,www.amazon.co.jp/dp/,;
+			$data->{url} =~ s,www\.amazon\.\Q$self->{_DOMAIN}\E/.*/dp/,www.amazon.$self->{_DOMAIN}/dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
 			my $date = $strp1->parse_datetime($data->{date});
@@ -101,7 +102,7 @@ use warnings;
 
 use WWW::Mechanize;
 
-my $login_url = 'https://www.amazon.co.jp/gp/sign-in.html';
+my $login_url = '/gp/sign-in.html';
 
 sub new
 {
@@ -113,6 +114,7 @@ sub new
 	   _MECH     => $mech,
 	   _EMAIL    => $args{email},
 	   _PASSWORD => $args{password},
+	   _DOMAIN   => $args{domain},
 	   _IS_LOGIN => 0,
 	}, $class;
 }
@@ -131,7 +133,7 @@ sub login
 	my ($self) = @_;
 	return 1 if $self->is_login(); # TODO: handle expiration
 	my $mech = $self->{_MECH};
-	$mech->get($login_url);
+	$mech->get('https://www.amazon.'.$self->{_DOMAIN}.$login_url);
 if(0) {
 print $mech->uri;
 open my $fh, '>', 'before.html';
@@ -163,7 +165,7 @@ open my $fh, '>', 'after.html';
 print $fh $mech->content;
 close $fh;
 }
-	return undef if $mech->content() !~ m!http://www.amazon.co.jp/gp/flex/sign-out.html!;
+	return undef if $mech->content() !~ m!http://www\.amazon\.\Q$self->{_DOMAIN}\E/gp/flex/sign-out.html!;
 	$self->is_login(1);
 	return 1;
 }
