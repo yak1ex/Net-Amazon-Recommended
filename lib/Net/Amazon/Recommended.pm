@@ -53,8 +53,8 @@ sub get
 	my $pages = $max_pages || 1;
 
 # TODO: Pattern depends on domain
-	my $strp1 = DateTime::Format::Strptime->new(pattern => '%mŒŽ %d, %Y');
-	my $strp2 = DateTime::Format::Strptime->new(pattern => '%mŒŽ, %Y');
+	my $strp1 = DateTime::Format::Strptime->new(pattern => '%Y/%m/%d');
+	my $strp2 = DateTime::Format::Strptime->new(pattern => '%Y/%m');
 
 	my $extractor = Template::Extract->new;
 # TODO: more relaxed template
