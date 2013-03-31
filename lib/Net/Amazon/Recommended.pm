@@ -112,7 +112,7 @@ sub new
 	my ($self, %args) = @_;
 	my $class = ref $self || $self;
 	my $mech = WWW::Mechanize->new;
-#	$mech->agent_alias('Windows IE 6');
+	$mech->agent_alias('Windows IE 6'); # Without this line, sign-in is not done
 	return bless {
 	   _MECH     => $mech,
 	   _EMAIL    => $args{email},
