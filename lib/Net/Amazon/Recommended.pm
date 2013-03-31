@@ -36,6 +36,11 @@ my (%url) =
 	COMINGSOON() => '/gp/yourstore/fr/ref=pd_ys_welc',
 );
 
+my (%format) = (
+	'co.jp' => ['%Y/%m/%d', '%Y/%m'],
+	'' => ['%B %d, %Y', '%B %Y'],
+);
+
 sub get
 {
 	my ($self, $type, $max_pages) = @_;
@@ -54,8 +59,8 @@ sub get
 	my $pages = $max_pages || 1;
 
 # TODO: Pattern depends on domain
-	my $strp1 = DateTime::Format::Strptime->new(pattern => '%Y/%m/%d');
-	my $strp2 = DateTime::Format::Strptime->new(pattern => '%Y/%m');
+	my $key = exists $format{$self->{_DOMAIN}} ? $self->{_DOMAIN} : '';
+	my (@strp) = map { DateTime::Format::Strptime->new(pattern => $_) } @{$format{$key}};
 
 	my $extractor = Template::Extract->new;
 # TODO: more relaxed template
@@ -86,8 +91,11 @@ close $fh;
 			$data->{url} =~ s,www\.amazon\.\Q$self->{_DOMAIN}\E/.*/dp/,www.amazon.$self->{_DOMAIN}/dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
-			my $date = $strp1->parse_datetime($data->{date});
-			$date = $strp2->parse_datetime($data->{date}) if !defined($date);
+			my $date;
+			foreach my $strp (@strp) {
+				$date = $strp->parse_datetime($data->{date});
+				last if defined $date;
+			}
 			$data->{date} = $date if defined $date;
 		}
 		push @$result, @{$source->{entry}};
