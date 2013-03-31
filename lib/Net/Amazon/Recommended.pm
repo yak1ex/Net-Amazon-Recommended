@@ -163,7 +163,7 @@ open my $fh, '>', 'after.html';
 print $fh $mech->content;
 close $fh;
 }
-	return undef if $mech->content() =~ m!http://www.amazon.co.jp/gp/yourstore/ref=pd_irl_gw?ie=UTF8&amp;signIn=1!;
+	return undef if $mech->content() !~ m!http://www.amazon.co.jp/gp/flex/sign-out.html!;
 	$self->is_login(1);
 	return 1;
 }
