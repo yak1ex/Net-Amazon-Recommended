@@ -47,7 +47,6 @@ sub get
 	$mech->login() or die 'login failed';
 
 	my $url = 'https://www.amazon.'.$self->{_DOMAIN}.$url{$type};
-print $url,"\n";
 	my $content = $mech->get($url);
 
 # TODO: Default to unlimited
@@ -73,9 +72,11 @@ EOF
 	my $result = [];
 	foreach my $page (1..$pages) {
 		$content = $mech->next() if $page != 1;
+if(0) {
 open my $fh, '>', 'out.html';
 print $fh $content;
 close $fh;
+}
 		my $source = $extractor->extract($extract_tmpl, $content);
 		$source->{category} =~ s/<[^>]*>//g;
 		$source->{category} =~ s/\n//g;
@@ -136,6 +137,12 @@ sub login
 	return 1 if $self->is_login(); # TODO: handle expiration
 	my $mech = $self->{_MECH};
 	$mech->get($login_url);
+if(0) {
+print $mech->uri;
+open my $fh, '>', 'before.html';
+print $fh $mech->content;
+close $fh;
+}
 	$mech->submit_form(
 		form_name => 'sign-in',
 		fields => {
@@ -144,11 +151,6 @@ sub login
 		},
 	);
 	if($mech->content() =~ m!/errors/validateCaptcha!) {
-{
-	open my $fh, '>', 'before.html';
-	print $fh $mech->content;
-	close $fh;
-}
 		$mech->content() =~ m|<img src="([^"]*)">|;
 		system "cygstart $1";
 		my $value = <STDIN>; chomp $value;
@@ -158,12 +160,14 @@ sub login
 				'field-keywords' => $value,
 			}
 		);
+	}
+if(0) {
 print $mech->uri;
 print Data::Dumper->Dump([$mech->cookie_jar]);
 open my $fh, '>', 'after.html';
 print $fh $mech->content;
 close $fh;
-	}
+}
 	return undef if $mech->content() =~ m!http://www.amazon.co.jp/gp/yourstore/ref=pd_irl_gw?ie=UTF8&amp;signIn=1!;
 	$self->is_login(1);
 	return 1;
@@ -175,7 +179,7 @@ sub get
 	my $mech = $self->{_MECH};
 	$self->login() or return undef;
 	$mech->get($url);
-print Data::Dumper->Dump([$mech->cookie_jar]);
+0 and print Data::Dumper->Dump([$mech->cookie_jar]);
 	return $mech->content();
 }
 
