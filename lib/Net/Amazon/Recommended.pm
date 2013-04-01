@@ -36,7 +36,10 @@ my (%url) = (
 	COMINGSOON() => '/gp/yourstore/fr/ref=pd_ys_welc',
 );
 
+# Except for welc, nav_ is prefixed
+# /ref=pd_ys_nav_<suffix>?rGroup=<key>
 my (%category) = (
+	'' => ['welc', 'All'],
 	'instant-video' => ['mov_aiv', 'Amazon Instant Video'],
 	'dmusic' => ['dmusic', 'Amazon MP3 Store'],
 	'appliances' => ['la', 'Appliances'],
