@@ -29,65 +29,9 @@ sub new
 	}, $class;
 }
 
-# TODO: Handle category
-my (%url) = (
-	ALL() => '/gp/yourstore/recs/ref=pd_ys_welc',
-	NEWRELEASE() => '/gp/yourstore/nr/ref=pd_ys_welc',
-	COMINGSOON() => '/gp/yourstore/fr/ref=pd_ys_welc',
-);
-
-# Except for welc, nav_ is prefixed
-# /ref=pd_ys_nav_<suffix>?rGroup=<key>
-my (%category) = (
-	''                    => ['welc',            'All'],
-	'instant-video'       => ['nav_mov_aiv',     'Amazon Instant Video'],
-	'dmusic'              => ['nav_dmusic',      'Amazon MP3 Store'],
-	'appliances'          => ['nav_la',          'Appliances'],
-	'mobile-apps'         => ['nav_mas',         'Appstore for Android'],
-	'arts-crafts'         => ['nav_ac',          'Arts, Crafts & Sewing'],
-	'automotive'          => ['nav_auto',        'Automotive'],
-	'baby-products'       => ['nav_ba',          'Baby'], # .com
-	'baby'                => ['nav_ba',          'Baby'], # .co.jp
-	'beauty'              => ['nav_bt',          'Beauty'], # nav_beauty
-	'books'               => ['nav_b',           'Books'],
-	'digital-text'        => ['nav_kstore',      'Books on Kindle'], # nav_kinc
-	'photo'               => ['nav_p',           'Camera & Photo'],
-	'wireless'            => ['nav_cps',         'Cell Phones & Accessories'],
-	'apparel'             => ['nav_a',           'Clothing & Accessories'],
-	'pc'                  => ['nav_pc',          'Computers'],
-	'diy',                => ['nav_diy',         'DIY'], # .co.jp
-	'dvd'                 => ['nav_d',           'DVD'], # .co.jp
-	'electronics'         => ['nav_e',           'Electronics'],
-	'english-books'       => ['nav_fb',          'English book'], # .co.jp
-	'food-beverage'       => ['nav_fb',          'Food & Beverage'], # .co.jp
-	'grocery'             => ['nav_gro',         'Grocery & Gourmet Food'],
-	'hpc'                 => ['nav_hpc',         'Health & Personal Care'],
-	'home-garden'         => ['nav_hg',          'Home & Kitchen'],
-	'hi'                  => ['nav_hi',          'Home Improvement'],
-	'industrial'          => ['nav_indust',      'Industrial & Scientific'],
-	'jewelry'             => ['nav_jw',          'Jewelry'], # nav__jwlry
-	'kitchen'             => ['nav_k',           'Kitchen & Dining'],
-	'magazines'           => ['nav_mag',         'Magazine Subscriptions'],
-	'digital-magazines'   => ['nav_',            'Magazines on Kindle'],
-	'instant-movie'       => ['nav_',            'Movies'],
-	'movies-tv'           => ['nav_mov',         'Movies & TV'],
-	'music'               => ['nav_m',           'Music'],
-	'musical-instruments' => ['nav_MI',          'Musical Instruments'],
-	'digital-newspapers'  => ['nav_',            'Newspapers on Kindle'],
-	'office-products'     => ['nav_op',          'Office & School Supplies'], # nav_office
-	'garden'              => ['nav_ol',          'Patio, Lawn & Garden'],
-	'pet-supplies'        => ['nav_petsupplies', 'Pet Supplies'],
-	'shoes'               => ['nav_shoe',        'Shoes'],
-	'software'            => ['nav_sw',          'Software'],
-	'sporting-goods'      => ['nav_sg',          'Sports & Outdoors'],
-	'instant-tv'          => ['nav_',            'TV'],
-	'toys-and-games'      => ['nav_t',           'Toys & Games'], # .com
-	'toys'                => ['nav_t',           'Toys'], # .co.jp
-	'video'               => ['nav_v',           'Video'], # .co.jp
-	'videogames'          => ['nav_vg',          'Video Games'],
-	'watch'               => ['nav_w',           'Watches'], # .co.jp
-	'watches'             => ['nav_w',           'Watches'], # .com
-);
+# URL: /gp/yourstore/<type>/ref=pd_ys_<category>?rGroup=<category_>
+# type: recs (All), nr (New Release), fr (Coming soon)
+# category, category_: depends on domain
 
 my (%format) = (
 	'co.jp' => ['%Y/%m/%d', '%Y/%m'],
