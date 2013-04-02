@@ -61,6 +61,7 @@ sub get
 # TODO: more relaxed template
 # TODO: there might be not date
 	my $extract_tmpl = <<'EOF';
+<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
 [% FOREACH entry %]<tr valign="top">
   <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
   <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
@@ -80,6 +81,7 @@ print $fh $content;
 close $fh;
 }
 		my $source = $extractor->extract($extract_tmpl, $content);
+		croak 'Non existent category' if $url =~ /\b(rGroup|nodeId)\b/ && $source->{category} eq '';
 		foreach my $data (@{$source->{entry}}) {
 			$data->{author} =~ s/^\s+//;
 			$data->{author} =~ s/\s+$//;

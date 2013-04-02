@@ -5,7 +5,7 @@ use Data::Dumper;
 
 plan skip_all => 'ENV is not set' if ! exists $ENV{AMAZON_EMAIL} || ! exists $ENV{AMAZON_PASSWORD};
 
-plan tests => 5;
+plan tests => 6;
 
 use_ok('Net::Amazon::Recommended');
 
@@ -16,3 +16,6 @@ lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_y
 note(scalar(@$dat).' items found');
 is(ref $dat->[0]{date}, 'DateTime');
 like($dat->[0]{url}, qr|https?://www.amazon.[^/]*/dp/[^/]+$|);
+throws_ok
+	{ $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_w&rGroup=watches') }
+	qr/Non existent category/, 'non existent category';
