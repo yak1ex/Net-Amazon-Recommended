@@ -72,9 +72,23 @@ sub get
 [% END %]
 EOF
 
+	my $notfound_regex = <<'EOF';
+<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
+<tr> 
+<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
+<tr> 
+<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
+[^<]*
+</td>
+</tr>
+</table></td>
+</tr>
+EOF
 	my $result = [];
 	foreach my $page (1..$pages) {
 		$content = $mech->next() if $page != 1;
+		last if $content =~ /$notfound_regex/;
+
 if(0) {
 open my $fh, '>', 'out.html';
 print $fh $content;
