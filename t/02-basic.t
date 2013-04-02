@@ -12,7 +12,7 @@ use_ok('Net::Amazon::Recommended');
 my $obj;
 lives_ok { $obj = Net::Amazon::Recommended->new(email => $ENV{AMAZON_EMAIL}, password => $ENV{AMAZON_PASSWORD}) };
 my $dat;
-lives_ok { $dat = $obj->get(Net::Amazon::Recommended->ALL) };
+lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_welc') };
 note(scalar(@$dat).' items found');
 is(ref $dat->[0]{date}, 'DateTime');
 like($dat->[0]{url}, qr|https?://www.amazon.[^/]*/dp/[^/]+$|);

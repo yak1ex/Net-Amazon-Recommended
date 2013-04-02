@@ -40,7 +40,7 @@ my (%format) = (
 
 sub get
 {
-	my ($self, $type, $max_pages) = @_;
+	my ($self, $url, $max_pages) = @_;
 
 	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
 		email    => $self->{_EMAIL},
@@ -49,7 +49,6 @@ sub get
 	);
 	$mech->login() or die 'login failed';
 
-	my $url = 'https://www.amazon.'.$self->{_DOMAIN}.$url{$type};
 	my $content = $mech->get($url);
 
 # TODO: Default to unlimited
