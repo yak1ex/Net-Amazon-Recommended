@@ -10,12 +10,6 @@ use Carp;
 use Template::Extract;
 use DateTime::Format::Strptime;
 
-use constant {
-	ALL => 0,
-	NEWRELEASE => 1,
-	COMINGSOON => 2,
-};
-
 sub new
 {
 	my $self = shift;
