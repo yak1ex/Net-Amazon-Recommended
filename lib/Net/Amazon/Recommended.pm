@@ -81,6 +81,7 @@ EOF
 	my $result = [];
 	foreach my $page (1..$pages) {
 		$content = $mech->next() if $page != 1;
+		last if ! defined $content; # Can't get content because next link does not exist, or some reasons
 		last if $content =~ /$notfound_regex/;
 
 if(0) {
@@ -197,8 +198,11 @@ sub next
 {
 	my ($self, $url) = @_;
 	my $mech = $self->{_MECH};
-	$mech->follow_link(url_regex => qr/pd_ys_next/);
-	return $mech->content();
+	if(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next/) }) {
+		return $mech->content();
+	} else {
+		return undef;
+	}
 }
 
 1;
