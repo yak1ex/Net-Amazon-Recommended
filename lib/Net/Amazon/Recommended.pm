@@ -3,7 +3,7 @@ package Net::Amazon::Recommended;
 use strict;
 use warnings;
 
-# ABSTRCT: Grab and configurate recommendations by Amazon
+# ABSTRACT: Grab and configurate recommendations by Amazon
 # VERSION
 
 use Carp;
