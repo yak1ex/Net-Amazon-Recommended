@@ -207,3 +207,93 @@ sub next
 
 1;
 __END__
+
+=head1 SYNOPSIS
+
+  my $obj = Net::Amazon::Recommended->new(
+    email => 'someone@example.com',
+    password => 'password',
+    domain => 'co.jp',
+  );
+  my $rec = $obj->get('http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_welc');
+  print join "\n", map { $_->{title} } @$rec;
+
+=head1 DESCRIPTION
+
+This module obtains recommended items in Amazon by using L<WWW::Mechanize>.
+
+To spcify category, you need to specify URL itself. To specify some constants or short-hand key is considered
+but currently rejected because category names are dependent on domains and it is difficult to enumerate all
+possible sub categories.
+
+=head1 METHODS
+
+=method new(C<%options>)
+
+Constructor. The following options are available.
+
+=over 4
+
+=item email =E<gt> $email
+
+Specify an email as a login ID.
+
+=item password =E<gt> $password
+
+Specify a password.
+
+=item domain =E<gt> $domain
+
+Domain of Amazon e.g. C<'com'>. Defaults to C<'co.jp'>.
+
+=back
+
+=method get(C<$url>, C<$max_pages> = 1)
+
+Returns array reference of recommended items.
+Each element is a hash reference having the following keys:
+
+=over 4
+
+=item C<id>
+
+ASIN ID.
+
+=item C<url>
+
+URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used.
+
+=item C<image_url>
+
+URL of cover image.
+
+=item C<title>
+
+Title.
+
+=item author
+
+Author.
+
+=item date
+
+L<DateTime> object of publish date.
+
+=item price
+
+price in just a string. Currency symbol is included.
+
+=back
+
+C<$url> can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
+
+C<$max_page> is the limitation of retrieving pages. Defaults to 1.
+
+=head1 TEST
+
+To test completely, you need to specify environment variables C<AMAZON_EMAIL> and C<AMAZON_PASSWORD>.
+
+=head1 SEE ALSO
+
+=for :list
+* L<WWW::Mechanize>
