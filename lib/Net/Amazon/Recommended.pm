@@ -51,17 +51,21 @@ sub get
 	);
 	$mech->login() or die 'login failed';
 
-	my $content = $mech->get($url);
+	my $content;
 
 # TODO: Default to unlimited
-	my $pages = $max_pages || 1;
+	my $pages = @_ >= 3 ? $max_pages : 1;
 
 	my $key = exists $format{$self->{_DOMAIN}} ? $self->{_DOMAIN} : '';
 	my (@strp) = map { DateTime::Format::Strptime->new(pattern => $_) } @{$format{$key}};
 
 	my $result = [];
-	foreach my $page (1..$pages) {
-		$content = $mech->next() if $page != 1;
+	while(! defined $pages || --$pages >= 0) {
+		if(defined $content) { # Successive invocation
+			$content = $mech->next();
+		} else { # First invocation
+			$content = $mech->get($url);
+		}
 		last if ! defined $content; # Can't get content because next link does not exist, or some reasons
 		last if $content =~ /$NOTFOUND_REGEX/;
 
@@ -291,7 +295,7 @@ price in just a string. Currency symbol is included.
 
 C<$url> can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
 
-C<$max_page> is the limitation of retrieving pages. Defaults to 1.
+C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<undef> B<explicitly> means no limitation, that is all recommended items are retrieved.
 
 =head1 TEST
 
