@@ -32,6 +32,36 @@ my (%format) = (
 	'' => ['%B %d, %Y', '%B %Y'],
 );
 
+# TODO: more relaxed template
+# TODO: there might be not date
+my $EXTRACT_TMPL = <<'EOF';
+<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
+[% FOREACH entry %]<tr valign="top">
+  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
+  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
+  <td width="100%">
+    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
+    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
+<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
+[% END %]
+EOF
+
+my $NOTFOUND_REGEX = <<'EOF';
+<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
+<tr> 
+<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
+<tr> 
+<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
+[^<]*
+</td>
+</tr>
+</table></td>
+</tr>
+EOF
+
+my $extractor = Template::Extract->new;
+my $EXTRACT_REGEX = $extractor->compile($EXTRACT_TMPL);
+
 sub get
 {
 	my ($self, $url, $max_pages) = @_;
@@ -51,45 +81,18 @@ sub get
 	my $key = exists $format{$self->{_DOMAIN}} ? $self->{_DOMAIN} : '';
 	my (@strp) = map { DateTime::Format::Strptime->new(pattern => $_) } @{$format{$key}};
 
-	my $extractor = Template::Extract->new;
-# TODO: more relaxed template
-# TODO: there might be not date
-	my $extract_tmpl = <<'EOF';
-<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
-[% FOREACH entry %]<tr valign="top">
-  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
-  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
-  <td width="100%">
-    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
-    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
-<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
-[% END %]
-EOF
-
-	my $notfound_regex = <<'EOF';
-<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
-<tr> 
-<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
-<tr> 
-<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
-[^<]*
-</td>
-</tr>
-</table></td>
-</tr>
-EOF
 	my $result = [];
 	foreach my $page (1..$pages) {
 		$content = $mech->next() if $page != 1;
 		last if ! defined $content; # Can't get content because next link does not exist, or some reasons
-		last if $content =~ /$notfound_regex/;
+		last if $content =~ /$NOTFOUND_REGEX/;
 
 if(0) {
 open my $fh, '>', 'out.html';
 print $fh $content;
 close $fh;
 }
-		my $source = $extractor->extract($extract_tmpl, $content);
+		my $source = $extractor->run($EXTRACT_REGEX, $content);
 		croak 'Non existent category' if $url =~ /\b(rGroup|nodeId)\b/ && $source->{category} eq '';
 		foreach my $data (@{$source->{entry}}) {
 			$data->{author} =~ s/^\s+//;
