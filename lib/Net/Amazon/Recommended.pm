@@ -269,7 +269,7 @@ ASIN ID.
 
 =item C<url>
 
-URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used.
+URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used and other components are stripped.
 
 =item C<image_url>
 
@@ -299,7 +299,9 @@ C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<
 
 =head1 TEST
 
-To test completely, you need to specify environment variables C<AMAZON_EMAIL> and C<AMAZON_PASSWORD>.
+To test this module completely, you need to specify environment variables C<AMAZON_EMAIL> and C<AMAZON_PASSWORD>.
+
+Because results of some tests are dependent on purchase history, they are marked as TODO.
 
 =head1 SEE ALSO
 
