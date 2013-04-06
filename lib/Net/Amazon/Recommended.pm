@@ -9,6 +9,7 @@ use warnings;
 use Carp;
 use Template::Extract;
 use DateTime::Format::Strptime;
+use Data::Section -setup;
 
 sub new
 {
@@ -32,35 +33,12 @@ my (%format) = (
 	'' => ['%B %d, %Y', '%B %Y'],
 );
 
+my $NOTFOUND_REGEX = ${__PACKAGE__->section_data('NOTFOUND_REGEX')};
+
 # TODO: more relaxed template
 # TODO: there might be not date
-my $EXTRACT_TMPL = <<'EOF';
-<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
-[% FOREACH entry %]<tr valign="top">
-  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
-  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
-  <td width="100%">
-    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
-    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
-<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
-[% END %]
-EOF
-
-my $NOTFOUND_REGEX = <<'EOF';
-<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
-<tr> 
-<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
-<tr> 
-<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
-[^<]*
-</td>
-</tr>
-</table></td>
-</tr>
-EOF
-
 my $extractor = Template::Extract->new;
-my $EXTRACT_REGEX = $extractor->compile($EXTRACT_TMPL);
+my $EXTRACT_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_RECS_TMPL')});
 
 sub get
 {
@@ -208,7 +186,30 @@ sub next
 	}
 }
 
+package Net::Amazon::Recommended;
 1;
+__DATA__
+__[ NOTFOUND_REGEX ]__
+<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
+<tr> 
+<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
+<tr> 
+<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
+[^<]*
+</td>
+</tr>
+</table></td>
+</tr>
+__[ EXTRACT_RECS_TMPL ]__
+<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
+[% FOREACH entry %]<tr valign="top">
+  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
+  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
+  <td width="100%">
+    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
+    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
+<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
+[% END %]
 __END__
 
 =head1 SYNOPSIS
