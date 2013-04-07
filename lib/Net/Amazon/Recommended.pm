@@ -107,8 +107,8 @@ sub get_status
 	my $content = $mech->get('http://www.amazon.'.$self->{_DOMAIN}.'/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords='.$asin);
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
-	return undef if ! exists $source->{values};
-	return { map { s/^\s*//; s/\s*$//; $_ } map { split /:/ } split /,/, $source->{values}};
+	return if ! exists $source->{values};
+	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
 }
 
 package Net::Amazon::Recommended::Mechanize;
@@ -181,7 +181,7 @@ open my $fh, '>', 'after.html';
 print $fh $mech->content;
 close $fh;
 }
-	return undef if $mech->content() !~ m!http://www\.amazon\.\Q$self->{_DOMAIN}\E/gp/flex/sign-out.html!;
+	return if $mech->content() !~ m!http://www\.amazon\.\Q$self->{_DOMAIN}\E/gp/flex/sign-out.html!;
 	$self->is_login(1);
 	return 1;
 }
@@ -190,7 +190,7 @@ sub get
 {
 	my ($self, $url) = @_;
 	my $mech = $self->{_MECH};
-	$self->login() or return undef;
+	$self->login() or return;
 	$mech->get($url);
 0 and print Data::Dumper->Dump([$mech->cookie_jar]);
 	return $mech->content();
@@ -203,7 +203,7 @@ sub next
 	if(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next/) }) {
 		return $mech->content();
 	} else {
-		return undef;
+		return;
 	}
 }
 
