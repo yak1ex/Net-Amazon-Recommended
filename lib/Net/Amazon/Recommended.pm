@@ -192,29 +192,8 @@ sub next
 
 package Net::Amazon::Recommended;
 1;
-__DATA__
-__[ NOTFOUND_REGEX ]__
-<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
-<tr> 
-<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
-<tr> 
-<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
-[^<]*
-</td>
-</tr>
-</table></td>
-</tr>
-__[ EXTRACT_RECS_TMPL ]__
-<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
-[% FOREACH entry %]<tr valign="top">
-  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
-  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
-  <td width="100%">
-    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
-    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
-<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
-[% END %]
-__END__
+
+=pod
 
 =head1 SYNOPSIS
 
@@ -307,3 +286,36 @@ Because results of some tests are dependent on purchase history, they are marked
 
 =for :list
 * L<WWW::Mechanize>
+
+=cut
+
+__DATA__
+__[ NOTFOUND_REGEX ]__
+<tr><td colspan="4"><hr  class="divider" noshade="noshade" size="1"/></td></tr>
+<tr> 
+<td colspan="4"><table bgcolor="#ffffee" cellpadding="5" cellspacing="0" width="100%">
+<tr> 
+<td class="small"><span class="h3color"><b>[^<]*</b></span><br />
+[^<]*
+</td>
+</tr>
+</table></td>
+</tr>
+__[ EXTRACT_RECS_TMPL ]__
+<div class="head">[% ... %]<br />[% category %]</div>[% ... %]
+[% FOREACH entry %]<tr valign="top">
+  <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
+  <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
+  <td width="100%">
+    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
+    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
+<tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
+[% END %]
+__[ EXTRACT_STATUS_TMPL ]__
+<script language="Javascript" type="text/javascript">
+amznJQ.onReady('amzn-ratings-bar-init', function() {
+    jQuery([% ... %]).amazonRatingsInterface({
+[% values %]
+    });
+});
+</script>
