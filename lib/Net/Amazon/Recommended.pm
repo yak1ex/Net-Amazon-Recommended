@@ -39,6 +39,7 @@ my $NOTFOUND_REGEX = ${__PACKAGE__->section_data('NOTFOUND_REGEX')};
 # TODO: there might be not date
 my $extractor = Template::Extract->new;
 my $EXTRACT_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_RECS_TMPL')});
+my $EXTRACT_STATUS_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_STATUS_TMPL')});
 
 sub get
 {
@@ -92,6 +93,22 @@ close $fh;
 		push @$result, @{$source->{entry}};
 	}
 	return $result;
+}
+
+sub get_status
+{
+	my ($self, $asin) = @_;
+	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
+		email    => $self->{_EMAIL},
+		password => $self->{_PASSWORD},
+		domain   => $self->{_DOMAIN},
+	);
+	$mech->login() or die 'login failed';
+	my $content = $mech->get('http://www.amazon.'.$self->{_DOMAIN}.'/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords='.$asin);
+# It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
+	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
+	return undef if ! exists $source->{values};
+	return { map { s/^\s*//; s/\s*$//; $_ } map { split /:/ } split /,/, $source->{values}};
 }
 
 package Net::Amazon::Recommended::Mechanize;
@@ -213,68 +230,60 @@ To spcify category, you need to specify URL itself. To specify some constants or
 but currently rejected because category names are dependent on domains and it is difficult to enumerate all
 possible sub categories.
 
-=head1 METHODS
-
 =method new(C<%options>)
 
 Constructor. The following options are available.
 
-=over 4
-
-=item email =E<gt> $email
-
+=for :list
+= email =E<gt> $email
 Specify an email as a login ID.
-
-=item password =E<gt> $password
-
+= password =E<gt> $password
 Specify a password.
-
-=item domain =E<gt> $domain
-
+= domain =E<gt> $domain
 Domain of Amazon e.g. C<'com'>. Defaults to C<'co.jp'>.
-
-=back
 
 =method get(C<$url>, C<$max_pages> = 1)
 
 Returns array reference of recommended items.
 Each element is a hash reference having the following keys:
 
-=over 4
-
-=item C<id>
-
+=for :list
+= C<id>
 ASIN ID.
-
-=item C<url>
-
+= C<url>
 URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used and other components are stripped.
-
-=item C<image_url>
-
+= C<image_url>
 URL of cover image.
-
-=item C<title>
-
+= C<title>
 Title.
-
-=item author
-
+= author
 Author.
-
-=item date
-
+= date
 L<DateTime> object of publish date.
-
-=item price
-
+= price
 price in just a string. Currency symbol is included.
-
-=back
 
 C<$url> can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
 
 C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<undef> B<explicitly> means no limitation, that is all recommended items are retrieved.
+
+=method get_status(C<$asin>)
+
+Returns a hash reference having the following keys. If the corresponding item is not found, C<undef> is returned.
+
+=for :list
+= C<starRating>
+Rated value for this item from 1 to 5. 0 means not rated.
+= C<isOwned>
+1 means this item is owned. 0 means not.
+= C<isNotInterested>
+1 means this item is not interested. 0 means not. Mark for not owned items.
+= C<isGift>
+1 means this item is gift. 0 means not.
+= C<isExcluded>
+1 means this item is not considered for recommendation. 0 means considered. Mark for owned items
+= C<isExcludedClickstream>
+I'm not sure.
 
 =head1 TEST
 
