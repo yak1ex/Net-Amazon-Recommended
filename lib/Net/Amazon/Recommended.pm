@@ -111,6 +111,46 @@ sub get_status
 	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
 }
 
+my %PARAM = (
+	starRating => ['onetofive',[0,1,2,3,4,5]],
+	isNotInterested => ['not-interested', ['NONE', 'NOTINTERESTED']],
+	isOwned => ['owned',['NONE', 'OWN']],
+	isExcluded => ['excluded',['NONE', 'EXCLUDED']],
+	isExcludedClickstream => ['excludedClickstream', ['NONE', 'EXCLUDED']],
+	isGift => ['isGift', ['NONE', 'ISGIFT']],
+	isPreferred => ['isPreferred', ['NONE', 'ISPREFERRED']],
+);
+
+sub set_status
+{
+	my ($self, $asin, $param) = @_;
+	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
+		email    => $self->{_EMAIL},
+		password => $self->{_PASSWORD},
+		domain   => $self->{_DOMAIN},
+	);
+	$mech->login() or die 'login failed';
+	my $dat = {
+		rating_asin => $asin,
+		'rating.source' => 'ir',
+		type => 'asin',
+		'return.response' => '204',
+		'template-name' => '/gp/yourstore/recs/ref=pd_ys_welc',
+	};
+	foreach my $key (keys %$param) {
+		if(exists $PARAM{$key}) {
+			$dat->{$asin.'_asin.rating.'.$PARAM{$key}[0]} = $PARAM{$key}[1][$param->{$key}];
+		}
+	}
+#print Data::Dumper->Dump([$dat]);
+	my $content = $mech->post('http://www.amazon.'.$self->{_DOMAIN}.'/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all', $dat);
+if(0) {
+open my $fh, '>', 'set.html';
+print $fh $content;
+close $fh;
+}
+}
+
 package Net::Amazon::Recommended::Mechanize;
 
 use strict;
@@ -205,6 +245,18 @@ sub next
 	} else {
 		return;
 	}
+}
+
+sub post
+{
+	my ($self, $url, $param) = @_;
+	my $mech = $self->{_MECH};
+	$self->login() or return;
+	$mech->cookie_jar->scan(sub {
+		 $param->{'session-id'} = $_[2] if $_[1] eq 'session-id';
+	});
+	$mech->post($url, $param);
+	return $mech->content();
 }
 
 package Net::Amazon::Recommended;
