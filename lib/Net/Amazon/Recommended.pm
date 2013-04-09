@@ -108,6 +108,32 @@ sub get_status
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
+# TODO: sieve invalid keys
+	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
+}
+
+my %URL = (
+# star, excluded
+	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
+# notinterested
+	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
+# star, excluded
+	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
+);
+
+sub get_last_status
+{
+	my ($self, $type) = @_;
+	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
+		email    => $self->{_EMAIL},
+		password => $self->{_PASSWORD},
+		domain   => $self->{_DOMAIN},
+	);
+	$mech->login() or die 'login failed';
+	my $content = $mech->get('http://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type});
+	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
+	return if ! exists $source->{values};
+# TODO: sieve invalid keys
 	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
 }
 
