@@ -115,16 +115,16 @@ close $fh;
 	return $result;
 }
 
-sub get_status
+sub _get_status
 {
-	my ($self, $asin) = @_;
+	my ($self, $type, $url) = @_;
 	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
 		email    => $self->{_EMAIL},
 		password => $self->{_PASSWORD},
 		domain   => $self->{_DOMAIN},
 	);
 	$mech->login() or die 'login failed';
-	my $content = $mech->get($self->_url('rate').$asin);
+	my $content = $mech->get($url);
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
@@ -132,20 +132,16 @@ sub get_status
 	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
 }
 
+sub get_status
+{
+	my ($self, $asin) = @_;
+	return $self->_get_status('rate', $self->_url('rate').$asin);
+}
+
 sub get_last_status
 {
 	my ($self, $type) = @_;
-	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		email    => $self->{_EMAIL},
-		password => $self->{_PASSWORD},
-		domain   => $self->{_DOMAIN},
-	);
-	$mech->login() or die 'login failed';
-	my $content = $mech->get($self->_url($type));
-	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
-	return if ! exists $source->{values};
-# TODO: sieve invalid keys
-	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
+	return $self->_get_status($type, $self->_url($type));
 }
 
 my %PARAM = (
