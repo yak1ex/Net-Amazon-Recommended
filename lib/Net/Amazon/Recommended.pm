@@ -43,6 +43,8 @@ my $EXTRACT_STATUS_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTR
 
 my %URL = (
 	root => '/',
+	login => '/gp/sign-in.html',
+	logout => '/gp/flex/sign-out.html',
 	rate => '/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords=',
 	submit => '/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all',
 	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
@@ -196,8 +198,11 @@ use warnings;
 
 use WWW::Mechanize;
 
-# TODO: Extract URL handling also here
-my $login_url = '/gp/sign-in.html';
+sub _url
+{
+	my ($self, $type) = @_;
+	return 'https://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type};
+}
 
 sub new
 {
@@ -228,7 +233,7 @@ sub login
 	my ($self) = @_;
 	return 1 if $self->is_login(); # TODO: handle expiration
 	my $mech = $self->{_MECH};
-	$mech->get('https://www.amazon.'.$self->{_DOMAIN}.$login_url);
+	$mech->get($self->_url('login'));
 if(0) {
 print $mech->uri;
 open my $fh, '>', 'before.html';
@@ -260,7 +265,8 @@ open my $fh, '>', 'after.html';
 print $fh $mech->content;
 close $fh;
 }
-	return if $mech->content() !~ m!http://www\.amazon\.\Q$self->{_DOMAIN}\E/gp/flex/sign-out.html!;
+	my $url = $self->_url('logout'); $url =~ s/^https/http/;
+	return if $mech->content() !~ /\Q$url\E/;
 	$self->is_login(1);
 	return 1;
 }
