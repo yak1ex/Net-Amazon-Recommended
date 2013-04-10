@@ -52,7 +52,6 @@ my %URL = (
 	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
 );
 
-# TODO: Need to confirm
 my %VALID = (
 	rate => [qw(itemId starRating isOwned)],
 	owned => [qw(itemId starRating isExcluded)],
@@ -79,7 +78,6 @@ sub get
 
 	my $content;
 
-# TODO: Default to unlimited
 	my $pages = @_ >= 3 ? $max_pages : 1;
 
 	my $key = exists $format{$self->{_DOMAIN}} ? $self->{_DOMAIN} : '';
