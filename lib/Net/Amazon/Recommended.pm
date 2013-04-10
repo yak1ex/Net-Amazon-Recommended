@@ -41,6 +41,24 @@ my $extractor = Template::Extract->new;
 my $EXTRACT_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_RECS_TMPL')});
 my $EXTRACT_STATUS_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_STATUS_TMPL')});
 
+my %URL = (
+	root => '/',
+	rate => '/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords=',
+	submit => '/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all',
+# star, excluded
+	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
+# notinterested
+	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
+# star, excluded
+	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
+);
+
+sub _url
+{
+	my ($self, $type) = @_;
+	return 'https://www.amazon.co.'.$self->{_DOMAIN}.$URL{lc $type};
+}
+
 sub get
 {
 	my ($self, $url, $max_pages) = @_;
@@ -80,7 +98,9 @@ close $fh;
 		foreach my $data (@{$source->{entry}}) {
 			$data->{author} =~ s/^\s+//;
 			$data->{author} =~ s/\s+$//;
-			$data->{url} =~ s,www\.amazon\.\Q$self->{_DOMAIN}\E/.*/dp/,www.amazon.$self->{_DOMAIN}/dp/,;
+			my $root = $self->_url('root');
+			$root =~ s,^https://,,;
+			$data->{url} =~ s,\Q$root\E.*/dp/,${root}dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
 			my $date;
@@ -104,22 +124,13 @@ sub get_status
 		domain   => $self->{_DOMAIN},
 	);
 	$mech->login() or die 'login failed';
-	my $content = $mech->get('http://www.amazon.'.$self->{_DOMAIN}.'/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords='.$asin);
+	my $content = $mech->get($self->_url('rate').$asin);
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
 # TODO: sieve invalid keys
 	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
 }
-
-my %URL = (
-# star, excluded
-	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
-# notinterested
-	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
-# star, excluded
-	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
-);
 
 sub get_last_status
 {
@@ -130,7 +141,7 @@ sub get_last_status
 		domain   => $self->{_DOMAIN},
 	);
 	$mech->login() or die 'login failed';
-	my $content = $mech->get('http://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type});
+	my $content = $mech->get($self->_url($type));
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
 # TODO: sieve invalid keys
@@ -169,7 +180,7 @@ sub set_status
 		}
 	}
 #print Data::Dumper->Dump([$dat]);
-	my $content = $mech->post('http://www.amazon.'.$self->{_DOMAIN}.'/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all', $dat);
+	my $content = $mech->post($self->_url('submit'), $dat);
 if(0) {
 open my $fh, '>', 'set.html';
 print $fh $content;
