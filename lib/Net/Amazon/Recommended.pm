@@ -195,6 +195,7 @@ use warnings;
 
 use WWW::Mechanize;
 
+# TODO: Extract URL handling also here
 my $login_url = '/gp/sign-in.html';
 
 sub new
