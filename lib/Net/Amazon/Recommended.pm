@@ -45,12 +45,16 @@ my %URL = (
 	root => '/',
 	rate => '/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords=',
 	submit => '/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all',
-# star, excluded
 	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
-# notinterested
 	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
-# star, excluded
 	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
+);
+
+# TODO: Need to confirm
+my %VALID = (
+	owned => [qw(itemId starRating isExcluded)],
+	notinterested => [qw(itemId isNotInterested)],
+	rated => [qw(itemId starRating isExcluded)]
 );
 
 sub _url
@@ -128,8 +132,8 @@ sub _get_status
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
-# TODO: sieve invalid keys
-	return { map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values}};
+	my (%result) = map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values};
+	return { map { $_ => $result{$_} } @{$VALID{$type}} };
 }
 
 sub get_status
