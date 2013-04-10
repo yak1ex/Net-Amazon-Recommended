@@ -91,21 +91,46 @@ Returns a hash reference having the following keys. If the corresponding item is
 
     1 means this item is owned. 0 means not.
 
+## get\_last\_status(`$type`)
+
+Returns a hash reference having the following keys for the last item of `$type`.
+
+- `starRating`
+
+    Rated value for this item from 1 to 5. 0 means not rated.
+    This key is avaiable for the case that `$type` is `'owned'` or `'rated'`.
+
 - `isNotInterested`
 
-    1 means this item is not interested. 0 means not. Mark for not owned items.
-
-- `isGift`
-
-    1 means this item is gift. 0 means not.
+    1 means this item is not interested. 0 means not.
+    This key is avaiable for the case that `$type` is `'notinterested'`.
 
 - `isExcluded`
 
-    1 means this item is not considered for recommendation. 0 means considered. Mark for owned items
+    1 means this item is not considered for recommendation. 0 means considered.
+    This key is avaiable for the case that `$type` is `'owned'` or `'rated'`.
 
-- `isExcludedClickstream`
+`$type` is case-insensitive.
 
-    I'm not sure.
+## set\_status(`$asin`, `\%args`)
+
+`%arg` is a hash having some of the following keys.
+
+- `starRating`
+
+    Rated value for this item from 1 to 5. 0 means not rated.
+
+- `isOwned`
+
+    1 means this item is owned. 0 means not.
+
+- `isNotInterested`
+
+    1 means this item is not interested. 0 means not.
+
+- `isExcluded`
+
+    1 means this item is not considered for recommendation. 0 means considered.
 
 # TEST
 

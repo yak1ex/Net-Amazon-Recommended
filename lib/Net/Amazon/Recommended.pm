@@ -363,14 +363,37 @@ Returns a hash reference having the following keys. If the corresponding item is
 Rated value for this item from 1 to 5. 0 means not rated.
 = C<isOwned>
 1 means this item is owned. 0 means not.
+
+=method get_last_status(C<$type>)
+
+Returns a hash reference having the following keys for the last item of C<$type>.
+
+=for :list
+= C<starRating>
+Rated value for this item from 1 to 5. 0 means not rated.
+This key is avaiable for the case that C<$type> is C<'owned'> or C<'rated'>.
 = C<isNotInterested>
-1 means this item is not interested. 0 means not. Mark for not owned items.
-= C<isGift>
-1 means this item is gift. 0 means not.
+1 means this item is not interested. 0 means not.
+This key is avaiable for the case that C<$type> is C<'notinterested'>.
 = C<isExcluded>
-1 means this item is not considered for recommendation. 0 means considered. Mark for owned items
-= C<isExcludedClickstream>
-I'm not sure.
+1 means this item is not considered for recommendation. 0 means considered.
+This key is avaiable for the case that C<$type> is C<'owned'> or C<'rated'>.
+
+C<$type> is case-insensitive.
+
+=method set_status(C<$asin>, C<\%args>)
+
+C<%arg> is a hash having some of the following keys.
+
+=for :list
+= C<starRating>
+Rated value for this item from 1 to 5. 0 means not rated.
+= C<isOwned>
+1 means this item is owned. 0 means not.
+= C<isNotInterested>
+1 means this item is not interested. 0 means not.
+= C<isExcluded>
+1 means this item is not considered for recommendation. 0 means considered.
 
 =head1 TEST
 
