@@ -17,10 +17,14 @@ sub new
 	my $class = ref $self || $self;
 	my %args = @_;
 	croak 'email andd password are required' if ! exists $args{email} || ! exists $args{password};
+	$args{domain} ||= 'co.jp';
 	return bless {
-		_EMAIL => $args{email},
-		_PASSWORD => $args{password},
-		_DOMAIN => $args{domain} || 'co.jp',
+		_DOMAIN => $args{domain},
+		_MECH => join('::', __PACKAGE__, 'Mechanize')->new(
+			email    => $args{email},
+			password => $args{password},
+			domain   => $args{domain},
+		),
 	}, $class;
 }
 
@@ -69,11 +73,7 @@ sub get
 {
 	my ($self, $url, $max_pages) = @_;
 
-	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		email    => $self->{_EMAIL},
-		password => $self->{_PASSWORD},
-		domain   => $self->{_DOMAIN},
-	);
+	my $mech = $self->{_MECH};
 	$mech->login() or die 'login failed';
 
 	my $content;
@@ -123,11 +123,7 @@ close $fh;
 sub _get_status
 {
 	my ($self, $type, $url) = @_;
-	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		email    => $self->{_EMAIL},
-		password => $self->{_PASSWORD},
-		domain   => $self->{_DOMAIN},
-	);
+	my $mech = $self->{_MECH};
 	$mech->login() or die 'login failed';
 	my $content = $mech->get($url);
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
@@ -162,11 +158,7 @@ my %PARAM = (
 sub set_status
 {
 	my ($self, $asin, $param) = @_;
-	my $mech = join('::', __PACKAGE__, 'Mechanize')->new(
-		email    => $self->{_EMAIL},
-		password => $self->{_PASSWORD},
-		domain   => $self->{_DOMAIN},
-	);
+	my $mech = $self->{_MECH};
 	$mech->login() or die 'login failed';
 	my $dat = {
 		rating_asin => $asin,
