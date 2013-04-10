@@ -52,6 +52,7 @@ my %URL = (
 
 # TODO: Need to confirm
 my %VALID = (
+	rate => [qw(itemId starRating isOwned)],
 	owned => [qw(itemId starRating isExcluded)],
 	notinterested => [qw(itemId isNotInterested)],
 	rated => [qw(itemId starRating isExcluded)]
@@ -60,7 +61,7 @@ my %VALID = (
 sub _url
 {
 	my ($self, $type) = @_;
-	return 'https://www.amazon.co.'.$self->{_DOMAIN}.$URL{lc $type};
+	return 'https://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type};
 }
 
 sub get
@@ -133,7 +134,7 @@ sub _get_status
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
 	return if ! exists $source->{values};
 	my (%result) = map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values};
-	return { map { $_ => $result{$_} } @{$VALID{$type}} };
+	return { map { $_ => $result{$_} } @{$VALID{lc $type}} };
 }
 
 sub get_status
