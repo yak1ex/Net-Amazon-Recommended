@@ -20,7 +20,7 @@ TODO: {
 	is($dat->{isOwned}, 1, 'isOwned');
 }
 my (%orig) = map { $_ => $dat->{$_} } qw(starRating isOwned);
-$orig{isOwned} = 0;
+$orig{isNotInterested} = 0;
 $orig{isExcluded} = 0;
 lives_ok { $obj->set_status('486267108X', { starRating => 5, isOwned => 0, isNotInterested => 0, isExcluded => 0 }) };
 lives_ok { $dat = $obj->get_status('486267108X') };
