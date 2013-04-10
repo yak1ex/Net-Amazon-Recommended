@@ -44,6 +44,7 @@ my $NOTFOUND_REGEX = ${__PACKAGE__->section_data('NOTFOUND_REGEX')};
 my $extractor = Template::Extract->new;
 my $EXTRACT_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_RECS_TMPL')});
 my $EXTRACT_STATUS_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_STATUS_TMPL')});
+my $EXTRACT_LIST_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_LIST_TMPL')});
 
 my %URL = (
 	root => '/',
@@ -54,13 +55,15 @@ my %URL = (
 	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
 	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
 	rated => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_rated?ie=UTF8&collection=rated',
+	purchased => '/gp/yourstore/iyr?ie=UTF8&collection=purchased',
 );
 
 my %VALID = (
 	rate => [qw(itemId starRating isOwned)],
 	owned => [qw(itemId starRating isExcluded)],
 	notinterested => [qw(itemId isNotInterested)],
-	rated => [qw(itemId starRating isExcluded)]
+	rated => [qw(itemId starRating isExcluded)],
+	purchased => [qw(itemId starRating isExcluded)],
 );
 
 sub _url
@@ -114,6 +117,44 @@ close $fh;
 				last if defined $date;
 			}
 			$data->{date} = $date if defined $date;
+		}
+		push @$result, @{$source->{entry}};
+	}
+	return $result;
+}
+
+sub get_list
+{
+	my ($self, $type, $max_pages) = @_;
+	my $url = $self->_url($type);
+
+	my $mech = $self->{_MECH};
+	$mech->login() or die 'login failed';
+
+	my $content;
+
+	my $pages = @_ >= 3 ? $max_pages : 1;
+
+	my $result = [];
+	while(! defined $pages || --$pages >= 0) {
+		if(defined $content) { # Successive invocation
+			$content = $mech->next();
+		} else { # First invocation
+			$content = $mech->get($url);
+		}
+		last if ! defined $content; # Can't get content because next link does not exist, or some reasons
+
+		my $source = $extractor->run($EXTRACT_LIST_REGEX, $content);
+		foreach my $data (@{$source->{entry}}) {
+			$data->{author} =~ s/^\s+//;
+			$data->{author} =~ s/\s+$//;
+			my $root = $self->_url('root');
+			$root =~ s,^https://,,;
+			$data->{url} =~ s,\Q$root\E.*/dp/,${root}dp/,;
+			$data->{url} =~ s,/ref=[^/]*$,,;
+# It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
+			my (%result) = map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, delete $data->{values};
+			$data->{$_} = $result{$_} for @{$VALID{lc $type}};
 		}
 		push @$result, @{$source->{entry}};
 	}
@@ -275,7 +316,12 @@ sub next
 {
 	my ($self, $url) = @_;
 	my $mech = $self->{_MECH};
-	if(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next/) }) {
+	if($mech->content =~ m|<a href="(/gp/yourstore/iyr/ref=pd_ys_iyr_next\?[^"]+)">|) {
+		my $url = $1;
+		$url =~ s/&amp;/&/g;
+		$mech->get($url);
+		return $mech->content();
+	} elsif(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next/) }) {
 		return $mech->content();
 	} else {
 		return;
@@ -438,3 +484,22 @@ amznJQ.onReady('amzn-ratings-bar-init', function() {
     });
 });
 </script>
+__[ EXTRACT_LIST_TMPL ]__
+[% FOREACH entry %]<tr valign=middle id="iyrListItem[% id %]">[% ... %]
+<a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a>[% ... %]
+<a href="[% ... %]">[% title %]</a>
+</b><br /><span id="iyrListItemByline[% ... %]">[% author %]</span><br />[% ... %]
+<script language="Javascript" type="text/javascript">
+amznJQ.onReady('amzn-ratings-bar-init', function() {
+    jQuery([% ... %]).amazonRatingsInterface({
+[% values %]
+    });
+});
+</script>
+</td>
+
+</tr>
+<tr>
+<td colspan=4><hr noshade color="#cccc99" width=100% size=1></td>
+</tr>[% ... %]
+[% END %]
