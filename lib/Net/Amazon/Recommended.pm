@@ -400,6 +400,35 @@ C<$url> can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/
 
 C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<undef> B<explicitly> means no limitation, that is all recommended items are retrieved.
 
+=method get_list(C<$type>, C<$max_pages> = 1)
+
+Returns array reference of items in the specified type. C<$type> can be C<'notinterested'>, C<'owned'>, C<'purchased'> or C<'rated'>.
+
+Each element is a hash reference having the following keys:
+
+=for :list
+= C<id>
+ASIN ID.
+= C<url>
+URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used and other components are stripped.
+= C<image_url>
+URL of cover image.
+= C<title>
+Title.
+= author
+Author. It might be empty.
+= C<starRating>
+Rated value for this item from 1 to 5. 0 means not rated.
+This key is avaiable for the case that C<$type> is C<'owned'>, C<'purchased'> or C<'rated'>.
+= C<isNotInterested>
+1 means this item is not interested. 0 means not.
+This key is avaiable for the case that C<$type> is C<'notinterested'>.
+= C<isExcluded>
+1 means this item is not considered for recommendation. 0 means considered.
+This key is avaiable for the case that C<$type> is C<'owned'>, C<'purchased'> or C<'rated'>.
+
+C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<undef> B<explicitly> means no limitation, that is all recommended items are retrieved.
+
 =method get_status(C<$asin>)
 
 Returns a hash reference having the following keys. If the corresponding item is not found, C<undef> is returned.

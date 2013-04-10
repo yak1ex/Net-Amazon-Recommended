@@ -79,6 +79,49 @@ Each element is a hash reference having the following keys:
 
 `$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` __explicitly__ means no limitation, that is all recommended items are retrieved.
 
+## get\_list(`$type`, `$max_pages` = 1)
+
+Returns array reference of items in the specified type. `$type` can be `'notinterested'`, `'owned'`, `'purchased'` or `'rated'`.
+
+Each element is a hash reference having the following keys:
+
+- `id`
+
+    ASIN ID.
+
+- `url`
+
+    URL for the item like http://www.amazon.co.jp/dp/4873110963. Just an ASIN is used and other components are stripped.
+
+- `image_url`
+
+    URL of cover image.
+
+- `title`
+
+    Title.
+
+- author
+
+    Author. It might be empty.
+
+- `starRating`
+
+    Rated value for this item from 1 to 5. 0 means not rated.
+    This key is avaiable for the case that `$type` is `'owned'`, `'purchased'` or `'rated'`.
+
+- `isNotInterested`
+
+    1 means this item is not interested. 0 means not.
+    This key is avaiable for the case that `$type` is `'notinterested'`.
+
+- `isExcluded`
+
+    1 means this item is not considered for recommendation. 0 means considered.
+    This key is avaiable for the case that `$type` is `'owned'`, `'purchased'` or `'rated'`.
+
+`$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` __explicitly__ means no limitation, that is all recommended items are retrieved.
+
 ## get\_status(`$asin`)
 
 Returns a hash reference having the following keys. If the corresponding item is not found, `undef` is returned.
