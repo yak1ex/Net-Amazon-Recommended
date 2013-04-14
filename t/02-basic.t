@@ -1,8 +1,6 @@
 use Test::More;
 use Test::Exception;
 
-use Data::Dumper;
-
 plan skip_all => 'ENV is not set' if ! exists $ENV{AMAZON_EMAIL} || ! exists $ENV{AMAZON_PASSWORD};
 
 plan tests => 18;

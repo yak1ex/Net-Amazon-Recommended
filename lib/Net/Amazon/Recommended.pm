@@ -96,11 +96,6 @@ sub get
 		last if ! defined $content; # Can't get content because next link does not exist, or some reasons
 		last if $content =~ /$NOTFOUND_REGEX/;
 
-if(0) {
-open my $fh, '>', 'out.html';
-print $fh $content;
-close $fh;
-}
 		my $source = $extractor->run($EXTRACT_REGEX, $content);
 		croak 'Non existent category' if $url =~ /\b(rGroup|nodeId)\b/ && $source->{category} eq '';
 		foreach my $data (@{$source->{entry}}) {
@@ -225,13 +220,7 @@ sub set_status
 			$dat->{$asin.'_asin.rating.'.$PARAM{$key}[0]} = $PARAM{$key}[1][$param->{$key}];
 		}
 	}
-#print Data::Dumper->Dump([$dat]);
 	my $content = $mech->post($self->_url('submit'), $dat);
-if(0) {
-open my $fh, '>', 'set.html';
-print $fh $content;
-close $fh;
-}
 }
 
 package Net::Amazon::Recommended::Mechanize;
@@ -269,20 +258,12 @@ sub is_login
 	return $self->{_IS_LOGIN};
 }
 
-use Data::Dumper;
-
 sub login
 {
 	my ($self) = @_;
 	return 1 if $self->is_login(); # TODO: handle expiration
 	my $mech = $self->{_MECH};
 	$mech->get($self->_url('login'));
-if(0) {
-print $mech->uri;
-open my $fh, '>', 'before.html';
-print $fh $mech->content;
-close $fh;
-}
 	$mech->submit_form(
 		form_name => 'sign-in',
 		fields => {
@@ -290,24 +271,6 @@ close $fh;
 			password => $self->{_PASSWORD},
 		},
 	);
-	if($mech->content() =~ m!/errors/validateCaptcha!) {
-		$mech->content() =~ m|<img src="([^"]*)">|;
-		system "cygstart $1";
-		my $value = <STDIN>; chomp $value;
-		print $value,"\n";
-		$mech->submit_form(
-			with_fields => {
-				'field-keywords' => $value,
-			}
-		);
-	}
-if(0) {
-print $mech->uri;
-print Data::Dumper->Dump([$mech->cookie_jar]);
-open my $fh, '>', 'after.html';
-print $fh $mech->content;
-close $fh;
-}
 	my $url = $self->_url('logout'); $url =~ s/^https/http/;
 	return if $mech->content() !~ /\Q$url\E/;
 	$self->is_login(1);
@@ -320,7 +283,6 @@ sub get
 	my $mech = $self->{_MECH};
 	$self->login() or return;
 	$mech->get($url);
-0 and print Data::Dumper->Dump([$mech->cookie_jar]);
 	return $mech->content();
 }
 
