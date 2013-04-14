@@ -508,7 +508,7 @@ __[ EXTRACT_RECS_TMPL ]__
 __[ EXTRACT_STATUS_TMPL ]__
 <script language="Javascript" type="text/javascript">
 amznJQ.onReady('amzn-ratings-bar-init', function() {
-    jQuery([% ... %]).amazonRatingsInterface({
+    jQuery([% /"#[^_]*_[^_]*_[^_]*_[^_]*"/ %]).amazonRatingsInterface({
 [% values %]
     });
 });
