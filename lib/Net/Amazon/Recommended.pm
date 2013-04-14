@@ -111,6 +111,18 @@ close $fh;
 			$data->{url} =~ s,\Q$root\E.*/dp/,${root}dp/,;
 			$data->{url} =~ s,/ref=[^/]*$,,;
 
+# Damn..., I can't make correct Template::Extract template, so making use of regexp
+			my $price = delete $data->{pricebox};
+			if($price =~ m|<span class="listprice">([^<]*)</span>|) {
+				$data->{listprice} = $1;
+			}
+			if($price =~ m|<span class="price"><b>([^<]*)</b></span>|) {
+				$data->{price} = $1;
+			}
+			if($price =~ m|<span class="price">([^<]*)</span>|) {
+				$data->{otherprice} = $1;
+			}
+
 			my $date;
 			foreach my $strp (@strp) {
 				$date = $strp->parse_datetime($data->{date});
@@ -502,7 +514,15 @@ __[ EXTRACT_RECS_TMPL ]__
   <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
   <td width="100%">
     <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
-    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]<span class="price"><b>[% price %]</b>[% ... %]
+    <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]
+    <table width="100%"  border="0" cellspacing="0" cellpadding="0" class="priceBox">
+      <tr>
+        <td width="45%">[% pricebox %]
+</table>
+
+        </td>
+      </tr>
+    </table>[% ... %]
 <tr><td colspan="4"><hr noshade="noshade" size="1" class="divider"></td></tr>[% ... %]
 [% END %]
 __[ EXTRACT_STATUS_TMPL ]__

@@ -5,7 +5,7 @@ use Data::Dumper;
 
 plan skip_all => 'ENV is not set' if ! exists $ENV{AMAZON_EMAIL} || ! exists $ENV{AMAZON_PASSWORD};
 
-plan tests => 15;
+plan tests => 18;
 
 use_ok('Net::Amazon::Recommended');
 
@@ -41,4 +41,7 @@ lives_ok { $dat = $obj->get('http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys
 TODO: {
 	local $TODO = 'depending on purchase history';
 	ok(@$dat > 30, 'unlimited pages');
+	cmp_ok(scalar (grep { exists $_->{price} } @$dat), '>', 30, 'price');
+	cmp_ok(scalar (grep { exists $_->{listprice} } @$dat), '>', 30, 'listprice');
+	cmp_ok(scalar (grep { exists $_->{otherprice} } @$dat), '>', 30, 'otherprice');
 }
