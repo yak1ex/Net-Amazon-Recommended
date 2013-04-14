@@ -40,7 +40,7 @@ Constructor. The following options are available.
 
 - domain => $domain
 
-    Domain of Amazon e.g. `'com'`. Defaults to `'co.jp'`.
+    Domain of Amazon e.g. `'com'`. Defaults to `'co.jp'`. `'com'`, `'co.uk'` and `'co.jp'` are checked. It might work for other domains.
 
 ## get(`$url`, `$max_pages` = 1)
 
@@ -74,6 +74,14 @@ Each element is a hash reference having the following keys:
 - price
 
     price in just a string. Currency symbol is included.
+
+- listprice
+
+    list price in just a string. Currency symbol is included.
+
+- otherprice
+
+    price by other sellers in just a string. Currency symbol is included.
 
 `$url` can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd\_ys\_nav\_b\_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
 
@@ -125,6 +133,9 @@ Each element is a hash reference having the following keys:
 ## get\_status(`$asin`)
 
 Returns a hash reference having the following keys. If the corresponding item is not found, `undef` is returned.
+__Unfortunately__, it seems to be that only `'co.jp'` provides the interface `/gp/rate-it/` used by this method.
+Other domains moved to /gp/betterizer/ intefrace.
+To set some state by `set_status()` then calling `get_last_status()` or `get_list()` might be used as workaround.
 
 - `starRating`
 
@@ -180,6 +191,8 @@ Returns a hash reference having the following keys for the last item of `$type`.
 To test this module completely, you need to specify environment variables `AMAZON_EMAIL` and `AMAZON_PASSWORD`.
 
 Because results of some tests are dependent on purchase history, they are marked as TODO.
+
+__CAUTIONS:__ Some tests, `03-status.t`, `05-domain.t` and `06-domain.t` will change your recommendation configurations.
 
 # SEE ALSO
 

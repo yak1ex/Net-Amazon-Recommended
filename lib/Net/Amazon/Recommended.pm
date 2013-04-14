@@ -385,7 +385,7 @@ Specify an email as a login ID.
 = password =E<gt> $password
 Specify a password.
 = domain =E<gt> $domain
-Domain of Amazon e.g. C<'com'>. Defaults to C<'co.jp'>.
+Domain of Amazon e.g. C<'com'>. Defaults to C<'co.jp'>. C<'com'>, C<'co.uk'> and C<'co.jp'> are checked. It might work for other domains.
 
 =method get(C<$url>, C<$max_pages> = 1)
 
@@ -407,6 +407,10 @@ Author.
 L<DateTime> object of publish date.
 = price
 price in just a string. Currency symbol is included.
+= listprice
+list price in just a string. Currency symbol is included.
+= otherprice
+price by other sellers in just a string. Currency symbol is included.
 
 C<$url> can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
 
@@ -444,6 +448,9 @@ C<$max_page> is the limitation of retrieving pages. Defaults to 1. To specify C<
 =method get_status(C<$asin>)
 
 Returns a hash reference having the following keys. If the corresponding item is not found, C<undef> is returned.
+B<Unfortunately>, it seems to be that only C<'co.jp'> provides the interface C</gp/rate-it/> used by this method.
+Other domains moved to /gp/betterizer/ intefrace.
+To set some state by C<set_status()> then calling C<get_last_status()> or C<get_list()> might be used as workaround.
 
 =for :list
 = C<starRating>
@@ -487,6 +494,8 @@ Rated value for this item from 1 to 5. 0 means not rated.
 To test this module completely, you need to specify environment variables C<AMAZON_EMAIL> and C<AMAZON_PASSWORD>.
 
 Because results of some tests are dependent on purchase history, they are marked as TODO.
+
+B<CAUTIONS:> Some tests, C<03-status.t>, C<05-domain.t> and C<06-domain.t> will change your recommendation configurations.
 
 =head1 SEE ALSO
 
