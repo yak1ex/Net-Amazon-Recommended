@@ -35,12 +35,12 @@ TODO: {
 lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_466294?ie=UTF8&nodeID=466294&parentID=465610&parentStoreNode=465610', 2) };
 TODO: {
 	local $TODO = 'depending on purchase history';
-	ok(@$dat < 15, '2 pages but 1 page');
+	cmp_ok(@$dat, '<', 15, '2 pages but 1 page');
 }
 lives_ok { $dat = $obj->get('http://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_vg?ie=UTF8&nodeID=637872&parentStoreNode=&rGroup=videogames', undef) };
 TODO: {
 	local $TODO = 'depending on purchase history';
-	ok(@$dat > 30, 'unlimited pages');
+	cmp_ok(@$dat, '>', 30, 'unlimited pages');
 	cmp_ok(scalar (grep { exists $_->{price} } @$dat), '>', 30, 'price');
 	cmp_ok(scalar (grep { exists $_->{listprice} } @$dat), '>', 30, 'listprice');
 	cmp_ok(scalar (grep { exists $_->{otherprice} } @$dat), '>', 30, 'otherprice');

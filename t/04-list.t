@@ -28,5 +28,5 @@ foreach my $type (qw(rated notinterested owned purchased)) {
 lives_ok { $dat = $obj->get_list('notinterested', undef) };
 TODO: {
 	local $TODO = 'depending on purchase history';
-	ok(@$dat > 30, 'unlimited pages');
+	cmp_ok(@$dat, '>', 30, 'unlimited pages');
 }
