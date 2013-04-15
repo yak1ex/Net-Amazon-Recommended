@@ -2,5 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+v0.0.2    2013-04-16 00:18:04 Asia/Tokyo
+    [Non-functional changes]
+        - Add missing prereqs by test scripts, such as Test::Exception.
+
 v0.0.1    2013-04-14 16:37:15 Asia/Tokyo
     - Initial release

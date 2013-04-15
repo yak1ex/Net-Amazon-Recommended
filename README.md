@@ -4,7 +4,7 @@ Net::Amazon::Recommended - Grab and configurate recommendations by Amazon
 
 # VERSION
 
-version v0.0.1
+version v0.0.2
 
 # SYNOPSIS
 
