@@ -2,6 +2,10 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+v0.0.3    2013-04-18 00:15:40 Asia/Tokyo
+    [Non-functional changes]
+        - Add another missing prereq to Data::Section.
+
 v0.0.2    2013-04-16 00:18:04 Asia/Tokyo
     [Non-functional changes]
         - Add missing prereqs by test scripts, such as Test::Exception.
