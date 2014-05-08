@@ -265,12 +265,13 @@ sub login
 	my $mech = $self->{_MECH};
 	$mech->get($self->_url('login'));
 	$mech->submit_form(
-		form_name => 'sign-in',
+		form_name => 'signIn',
 		fields => {
 			email => $self->{_EMAIL},
 			password => $self->{_PASSWORD},
 		},
 	);
+	$mech->get($self->_url('root'));
 	my $url = $self->_url('logout'); $url =~ s/^https/http/;
 	return if $mech->content() !~ /\Q$url\E/;
 	$self->is_login(1);
