@@ -46,11 +46,17 @@ my $EXTRACT_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_REC
 my $EXTRACT_STATUS_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_STATUS_TMPL')});
 my $EXTRACT_LIST_REGEX = $extractor->compile(${__PACKAGE__->section_data('EXTRACT_LIST_TMPL')});
 
+my (%handle) = (
+	'co.jp' => 'jpflex',
+	'com'   => 'usflex',
+	'co.uk' => 'gbflex',
+);
+
 my %URL = (
 	root => '/',
-	login => '/gp/sign-in.html',
+	login => '/ap/signin?_encoding=UTF8&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0',
 	logout => '/gp/flex/sign-out.html',
-	rate => '/gp/rate-it/ref=pd_ys_wizard_search?rateIndex=search-alias%3Daps&rateKeywords=',
+	rate => '/gp/yourstore/rate-this-asin/ref=pd_ybh_recs_why_why?ie=UTF8&ASIN=',
 	submit => '/gp/yourstore/ratings/submit.html/ref=pd_recs_rate_dp_ys_ir_all',
 	owned => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_own?ie=UTF8&collection=owned',
 	notinterested => '/gp/yourstore/iyr/ref=pd_ys_iyr_edit_notInt?ie=UTF8&collection=notInt',
@@ -176,6 +182,7 @@ sub _get_status
 	my $content = $mech->get($url);
 # It looks like easy thing to handle inside Template::Extract, but I can't achieve it...
 	my $source = $extractor->run($EXTRACT_STATUS_REGEX, $content);
+	return if $content !~ m,<span id="(?:ysProdInfo\.|iyrListItemByline)[^"]*">,;
 	return if ! exists $source->{values};
 	my (%result) = map { /^\s*(\S*)\s*$/; } map { split /:/ } split /,/, $source->{values};
 	return { map { $_ => $result{$_} } @{$VALID{lc $type}} };
@@ -233,7 +240,11 @@ use WWW::Mechanize;
 sub _url
 {
 	my ($self, $type) = @_;
-	return 'https://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type};
+	my $param = '';
+	if(lc $type eq 'login') {
+		$param = "&openid.assoc_handle=$handle{$self->{_DOMAIN}}";
+	}
+	return 'https://www.amazon.'.$self->{_DOMAIN}.$URL{lc $type}.$param;
 }
 
 sub new
@@ -247,21 +258,29 @@ sub new
 	   _EMAIL    => $args{email},
 	   _PASSWORD => $args{password},
 	   _DOMAIN   => $args{domain},
-	   _IS_LOGIN => 0,
+	   _IS_LOGIN => undef,
 	}, $class;
 }
 
 sub is_login
 {
-	my ($self, $value) = @_;
-	$self->{_IS_LOGIN} = $value if defined $value;
+	my ($self) = @_;
+	if(! defined $self->{_IS_LOGIN} || $self->{_IS_LOGIN} + 10*60 < time()) {
+		my $mech = $self->{_MECH};
+		$mech->get($self->_url('root'));
+		if($mech->content() =~ /'config.signOutText',\n  null/) {
+			undef $self->{_IS_LOGIN};
+		} else {
+			$self->{_IS_LOGIN} = time();
+		}
+	}
 	return $self->{_IS_LOGIN};
 }
 
 sub login
 {
 	my ($self) = @_;
-	return 1 if $self->is_login(); # TODO: handle expiration
+	return 1 if $self->is_login();
 	my $mech = $self->{_MECH};
 	$mech->get($self->_url('login'));
 	$mech->submit_form(
@@ -271,11 +290,7 @@ sub login
 			password => $self->{_PASSWORD},
 		},
 	);
-	$mech->get($self->_url('root'));
-	my $url = $self->_url('logout'); $url =~ s/^https/http/;
-	return if $mech->content() !~ /\Q$url\E/;
-	$self->is_login(1);
-	return 1;
+	return $self->is_login();
 }
 
 sub get
@@ -296,7 +311,7 @@ sub next
 		$url =~ s/&amp;/&/g;
 		$mech->get($url);
 		return $mech->content();
-	} elsif(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next/) }) {
+	} elsif(defined eval { $mech->follow_link(url_regex => qr/pd_ys_next_\d+\?/) }) {
 		return $mech->content();
 	} else {
 		return;
@@ -485,7 +500,7 @@ __[ EXTRACT_RECS_TMPL ]__
   <td rowspan="2"><span id="ysNum.[% id %]">[% ... %]</span></td>[% ... %]
   <td align="center" valign="top"><h3 style="margin: 0"><a href="[% url %]"><img src="[% image_url %]"[% ... %]/></a></h3></td>
   <td width="100%">
-    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong></a> <br /> 
+    <a href="[% ... %]" id="ysProdLink.[% ... %]"><strong>[% title %]</strong>[% ... %]</a> <br /> 
     <span id="ysProdInfo.[% ... %]">[% author %][% /(?:<em class="notPublishedYet">)?/ %]([% date %])[% ... %]
     <table width="100%"  border="0" cellspacing="0" cellpadding="0" class="priceBox">
       <tr>
@@ -500,7 +515,7 @@ __[ EXTRACT_RECS_TMPL ]__
 __[ EXTRACT_STATUS_TMPL ]__
 <script language="Javascript" type="text/javascript">
 amznJQ.onReady('amzn-ratings-bar-init', function() {
-    jQuery([% /"#[^_]*_[^_]*_[^_]*_[^_]*"/ %]).amazonRatingsInterface({
+    jQuery([% ... %]).amazonRatingsInterface({
 [% values %]
     });
 });

@@ -27,7 +27,7 @@ throws_ok
 	qr/Non existent category/, 'non existent category';
 TODO: {
 	local $TODO = 'depending on purchase history';
-	lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_diy?ie=UTF8&nodeID=2017405051&parentStoreNode=&rGroup=diy') };
+	lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_MI_2128023051?ie=UTF8&nodeID=2128023051&parentStoreNode=&rGroup=musical-instruments') };
 	is(@$dat, 0, 'notfound');
 }
 lives_ok { $dat = $obj->get('https://www.amazon.co.jp/gp/yourstore/recs/ref=pd_ys_nav_b_466294?ie=UTF8&nodeID=466294&parentID=465610&parentStoreNode=465610', 2) };
