@@ -4,7 +4,7 @@ Net::Amazon::Recommended - Grab and configurate recommendations by Amazon
 
 # VERSION
 
-version v0.0.3
+version v0.0.4
 
 # SYNOPSIS
 
@@ -18,7 +18,7 @@ version v0.0.3
 
 # DESCRIPTION
 
-This module obtains recommended items in Amazon by using [WWW::Mechanize](http://search.cpan.org/perldoc?WWW::Mechanize).
+This module obtains recommended items in Amazon by using [WWW::Mechanize](https://metacpan.org/pod/WWW::Mechanize).
 
 To spcify category, you need to specify URL itself. To specify some constants or short-hand key is considered
 but currently rejected because category names are dependent on domains and it is difficult to enumerate all
@@ -69,7 +69,7 @@ Each element is a hash reference having the following keys:
 
 - date
 
-    [DateTime](http://search.cpan.org/perldoc?DateTime) object of publish date.
+    [DateTime](https://metacpan.org/pod/DateTime) object of publish date.
 
 - price
 
@@ -85,7 +85,7 @@ Each element is a hash reference having the following keys:
 
 `$url` can be sub category page like http://www.amazon.co.jp/gp/yourstore/recs/ref=pd\_ys\_nav\_b\_515826?ie=UTF8&nodeID=515826&parentID=492352&parentStoreNode=492352.
 
-`$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` __explicitly__ means no limitation, that is all recommended items are retrieved.
+`$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` **explicitly** means no limitation, that is all recommended items are retrieved.
 
 ## get\_list(`$type`, `$max_pages` = 1)
 
@@ -128,12 +128,12 @@ Each element is a hash reference having the following keys:
     1 means this item is not considered for recommendation. 0 means considered.
     This key is avaiable for the case that `$type` is `'owned'`, `'purchased'` or `'rated'`.
 
-`$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` __explicitly__ means no limitation, that is all recommended items are retrieved.
+`$max_page` is the limitation of retrieving pages. Defaults to 1. To specify `undef` **explicitly** means no limitation, that is all recommended items are retrieved.
 
 ## get\_status(`$asin`)
 
 Returns a hash reference having the following keys. If the corresponding item is not found, `undef` is returned.
-__Unfortunately__, it seems to be that only `'co.jp'` provides the interface `/gp/rate-it/` used by this method.
+**Unfortunately**, it seems to be that only `'co.jp'` provides the interface `/gp/rate-it/` used by this method.
 Other domains moved to /gp/betterizer/ intefrace.
 To set some state by `set_status()` then calling `get_last_status()` or `get_list()` might be used as workaround.
 
@@ -192,11 +192,11 @@ To test this module completely, you need to specify environment variables `AMAZO
 
 Because results of some tests are dependent on purchase history, they are marked as TODO.
 
-__CAUTIONS:__ Some tests, `03-status.t`, `05-domain.t` and `06-domain.t` will change your recommendation configurations.
+**CAUTIONS:** Some tests, `03-status.t`, `05-domain.t` and `06-domain.t` will change your recommendation configurations.
 
 # SEE ALSO
 
-- [WWW::Mechanize](http://search.cpan.org/perldoc?WWW::Mechanize)
+- [WWW::Mechanize](https://metacpan.org/pod/WWW::Mechanize)
 
 # AUTHOR
 

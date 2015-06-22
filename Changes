@@ -2,6 +2,10 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+v0.0.4    2015-06-23 01:33:25JST+0900 Asia/Tokyo
+    [Functional changes]
+        - Reflect login and rating scheme change at Amazon.
+
 v0.0.3    2013-04-18 00:15:40 Asia/Tokyo
     [Non-functional changes]
         - Add another missing prereq to Data::Section.
